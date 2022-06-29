@@ -19,7 +19,7 @@
         "php": "^8.0.2",
 		"ext-pdo": "*",
 		"ext-json": "*",
-		"guzzlehttp/guzzle": "^7.2",
+		"guzzlehttp/guzzle": "^7.4",
         "illuminate/support": "^9.14.1",
 		"laravel/framework": "^9.0"
     },
