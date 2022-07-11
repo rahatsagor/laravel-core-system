@@ -28,12 +28,12 @@
 
                             <div class="form-group">
                                 <label for="admin_email">Frontend URL</label>
-                                <input type="url" class="form-control" placeholder="yourdomain.com" id="frontend_url" name="frontend_url" required>
+                                <input type="url" class="form-control" placeholder="https://yourdomain.com" id="frontend_url" name="frontend_url" required>
                             </div>
 
                             <div class="form-group">
                                 <label for="admin_email">Admin URL</label>
-                                <input type="url" class="form-control" placeholder="admin.yourdomain.com" id="admin_url" name="admin_url" required>
+                                <input type="url" class="form-control" placeholder="https://admin.yourdomain.com" id="admin_url" name="admin_url" required>
                             </div>
 
 

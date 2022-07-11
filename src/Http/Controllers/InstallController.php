@@ -25,7 +25,6 @@ class InstallController extends Controller
 
     public function step1()
     {
-
         $permission['php'] = version_compare(PHP_VERSION, "8.0.2", ">");
         $permission['curl'] = extension_loaded('curl');
         $permission['mysqli'] = extension_loaded('mysqli');
@@ -52,7 +51,7 @@ class InstallController extends Controller
 
     public function step3()
     {
-        if (file_exists(storage_path('/app/license.json'))){
+        if (file_exists(storage_path('/app/license.json'))) {
             return view('laravel-core-system::step3');
         } else {
             return redirect('/install/step2');
@@ -84,32 +83,32 @@ class InstallController extends Controller
 
     public function database_installation(Request $request)
     {
-
-        try {
-            $connection = new PDO(
-                sprintf("mysql:host=%s:%s;dbname=%s", $request->get('DB_HOST'), $request->get('DB_PORT'), $request->get('DB_DATABASE')),
-                $request->get('DB_USERNAME'),
-                $request->get('DB_PASSWORD', '')
-            );
-            $connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        } catch (Exception) {
+        if ($this->check_database_connection($request->DB_HOST, $request->DB_DATABASE, $request->DB_USERNAME, $request->DB_PASSWORD)) {
+            $path = base_path('.env');
+            if (file_exists($path)) {
+                foreach ($request->types as $type) {
+                    LaravelCoreSystem::setEnv($type, $request[$type]);
+                }
+                try {
+                    Artisan::call('config:clear');
+                } catch (Exception) {
+                }
+                return redirect('install/step4');
+            } else {
+                return redirect('install/step3');
+            }
+        } else {
             return redirect('install/step3/database_error');
         }
+    }
 
-        $path = base_path('.env');
-        if (file_exists($path)) {
-            foreach ($request->types as $type) {
-                LaravelCoreSystem::setEnv($type, $request[$type]);
-            }
-            try {
-                Artisan::call('config:clear');
-            } catch (Exception) {
-            }
-            return redirect('install/step4');
+    public function check_database_connection($db_host = "", $db_name = "", $db_user = "", $db_pass = "")
+    {
+        if (@mysqli_connect($db_host, $db_user, $db_pass, $db_name)) {
+            return true;
         } else {
-            return redirect('install/step3');
+            return false;
         }
-
     }
 
     public function import_sql()
