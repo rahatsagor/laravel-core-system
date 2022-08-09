@@ -15,15 +15,12 @@ class LaravelCoreSystemServiceProvider extends ServiceProvider
     {
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'laravel-core-system');
         $this->loadRoutesFrom(__DIR__ . '/../routes/install.php');
-        if ($this->app->runningInConsole()) {
-            $this->commands([
-                CheckLicense::class,
-            ]);
-            $this->app->booted(function () {
-                $schedule = $this->app->make(Schedule::class);
-                $schedule->command('rs:check')->weekly();
-            });
-        }
+        $this->commands([
+            CheckLicense::class,
+        ]);
+        $this->app->afterResolving(Schedule::class, function (Schedule $schedule) {
+            $schedule->command(CheckLicense::class)->weekly();
+        });
     }
 
     /**

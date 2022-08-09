@@ -35,6 +35,11 @@
                                 <input type="text" class="form-control" value="" id="code" name="code"
                                        placeholder="**** **** **** ****" required="">
                             </div>
+                            <div class="form-group">
+                                <label for="email">Contact Email:</label>
+                                <input type="email" class="form-control" value="" id="email" name="email"
+                                       placeholder="Your email address" required="">
+                            </div>
                             <div class="text-center mt-3">
                                 <button type="submit" class="btn btn-primary">Continue</button>
                             </div>

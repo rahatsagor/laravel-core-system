@@ -25,12 +25,12 @@ class LaravelCoreSystem
         }
     }
 
-    public static function activateLicense($code)
+    public static function activateLicense($code, $email)
     {
         $key = $code;
         $domain = $_SERVER['SERVER_NAME'];
         $name = env('ITEM_NAME');
-        $verify = Http::post('https://license.rsapplication.com/api/envato-register-license', ['domain' => $domain, 'key' => $key, 'item' => $name]);
+        $verify = Http::post('https://license.rsapplication.com/api/envato-register-license', ['domain' => $domain, 'key' => $key, 'email' => $email, 'item' => $name]);
 
         if ($verify->status() === 200) {
             $time = Carbon::now();

@@ -71,7 +71,7 @@ class InstallController extends Controller
     public function verify_code(Request $request)
     {
 
-        $res = LaravelCoreSystem::activateLicense($request->get('code'));
+        $res = LaravelCoreSystem::activateLicense($request->get('code'), $request->get('email'));
         if ($res['status'] === 1) {
             return redirect('/install/step3');
         } else {
