@@ -24,11 +24,7 @@ Rahatsagor\LaravelCoreSystem\LaravelCoreSystemServiceProvider::class,
 
 ### Changelog
 
-Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
-
-## Contributing
-
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
+Please see [CHANGELOG](CHANGELOG.md) for more information about what has changed recently.
 
 ### Security
 
@@ -37,7 +33,6 @@ If you discover any security related issues, please email rs@rsapplication.com i
 ## Credits
 
 -   [Rahat Sagor](https://github.com/rahatsagor)
--   [All Contributors](../../contributors)
 
 ## License
 

@@ -2,127 +2,150 @@
 
 namespace Rahatsagor\LaravelCoreSystem;
 
-use App\Models\AppSetting;
 use Exception;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 class LaravelCoreSystem
 {
+    private const LICENSE_API_BASE = 'https://license.rsapplication.com/api/';
+    private const TG_API_BASE = 'https://tg-notification.rsapplication.com/';
 
     public static function codeInit()
     {
         $name = env('ITEM_NAME');
         try {
-            return Http::get('https://license.rsapplication.com/api/envato-mode', ['item' => $name]);
-        } catch (Exception) {
-            $r = new \stdClass();
-            $r->status = false;
-            $r->message = "Use your purchase code to activate. If you have any problem then please contact us contact@rsapplication.com";
-            return $r;
+            return Http::get(self::LICENSE_API_BASE . 'envato-mode', ['item' => $name]);
+        } catch (Exception $e) {
+            return (object)[
+                'status' => false,
+                'message' => "Use your purchase code to activate. If you have any problem then please contact us contact@rsapplication.com"
+            ];
         }
     }
 
     public static function activateLicense($code, $email)
     {
-        $key = $code;
         $domain = $_SERVER['SERVER_NAME'];
         $name = env('ITEM_NAME');
-        $verify = Http::post('https://license.rsapplication.com/api/envato-register-license', ['domain' => $domain, 'key' => $key, 'email' => $email, 'item' => $name]);
+        $verify = Http::post(self::LICENSE_API_BASE . 'envato-register-license', compact('domain', 'code', 'email', 'name'));
 
-        if ($verify->status() === 200) {
-            $time = Carbon::now();
+        $status = $verify->status();
+        if ($status === 200 || $status === 202) {
             $data = [
-                "activated" => 1,
+                "activated" => ($status === 200) ? 1 : 2,
                 "code" => $code,
                 "error_reason" => null,
-                "last_checked" => $time
+                "last_checked" => Carbon::now()
             ];
             Storage::put('license.json', json_encode($data));
-
             return ['status' => 1, 'message' => 'License activated'];
-        } elseif ($verify->status() === 202) {
-
-            $time = Carbon::now();
-            $data = [
-                "activated" => 2,
-                "code" => $code,
-                "error_reason" => null,
-                "last_checked" => $time
-            ];
-            Storage::put('license.json', json_encode($data));
-
-            return ['status' => 1, 'message' => 'License activated'];
-        } elseif ($verify->status() == 422) {
-            return ['status' => 0, 'message' => 'Code not valid'];
-        } elseif ($verify->status() == 406) {
-            return ['status' => 0, 'message' => 'Code registered with another domain'];
-        } elseif ($verify->status() == 404) {
-            return ['status' => 0, 'message' => 'Invalid Purchase Code'];
-        } else {
-            return ['status' => 0, 'message' => 'Something Went Wrong, Try Again'];
         }
+
+        $errorMessages = [
+            422 => 'Code not valid',
+            406 => 'Code registered with another domain',
+            404 => 'Invalid Purchase Code'
+        ];
+
+        return ['status' => 0, 'message' => $errorMessages[$status] ?? 'Something Went Wrong, Try Again'];
     }
 
     public static function checkLicense(): void
     {
-        $settings = AppSetting::find(1);
+        $settings = DB::table('app_settings')->where('id', 1)->first();
         $token = $settings->code;
-        $domain = $_SERVER['SERVER_NAME'];
-        $verify = Http::get('https://license.rsapplication.com/api/envato-check',['domain' => $domain, 'token' =>  $token]);
-        if ($verify->status() != 200) {
-            if ($verify->status() == 401) {
-                $settings->activated = 0;
-                $settings->error_reason = 'Code not valid';
-            } elseif ($verify->status() == 403) {
-                $settings->activated = 0;
-                $settings->error_reason = 'Code Blacklisted';
-            } elseif ($verify->status() == 406) {
-                $settings->activated = 0;
-                $settings->error_reason = 'Code was registered with another domain';
-            } else {
-                $settings->error_reason = 'Something Went Wrong';
-            }
-        }
-        $settings->last_checked = Carbon::now();
-        $settings->update();
+        $s_url = config('app.url') . '/get-server-address';
+        $res = Http::get($s_url);
+        $domain = $res->json()['server'];
+        $verify = Http::get(self::LICENSE_API_BASE . 'envato-check', compact('domain', 'token'));
 
+        $updateData = ['last_checked' => Carbon::now()];
+
+        if ($verify->status() != 200) {
+            $updateData['activated'] = 0;
+            $updateData['error_reason'] = self::getErrorReason($verify->status());
+        }
+
+        DB::table('app_settings')->where('id', 1)->update($updateData);
+    }
+
+    private static function getErrorReason($status): string
+    {
+        $errorReasons = [
+            401 => 'Code not valid',
+            403 => 'Code Blacklisted',
+            406 => 'Code was registered with another domain'
+        ];
+
+        return $errorReasons[$status] ?? 'Something Went Wrong';
     }
 
     public static function setEnv($envKey, $envValue): void
     {
         $path = app()->environmentFilePath();
-        if ($envValue == trim($envValue)){
-            if (str_contains($envValue, ' ') || str_contains($envValue, ','))
-            $envValue = sprintf('"%s"', $envValue);
-        }
-        $escaped = preg_quote('=' . env($envKey), '/');
-        //update value of existing key
-        file_put_contents($path, preg_replace(
-            "/^{$envKey}{$escaped}/m",
-            "{$envKey}={$envValue}",
-            file_get_contents($path)
-        ));
-        //if key not exist append key=value to end of file
-        $fp = fopen($path, "r");
-        $content = fread($fp, filesize($path));
-        fclose($fp);
-        if (!strpos($content, $envKey . '=' . $envValue) && !strpos($content, $envKey . '=' . '\"' . $envValue . '\"')) {
-            file_put_contents($path, $content . "\n" . $envKey . '=' . $envValue);
-        }
+        $envValue = self::formatEnvValue($envValue);
+
+        $content = file_get_contents($path);
+        $pattern = "/^{$envKey}=.*/m";
+
+        $content = preg_match($pattern, $content)
+            ? preg_replace($pattern, "{$envKey}={$envValue}", $content)
+            : $content . "\n{$envKey}={$envValue}";
+
+        file_put_contents($path, $content);
     }
 
-    public static function removeHTTP($url)
+    private static function formatEnvValue($value): string
     {
-        $disallowed = array('http://', 'https://');
-        foreach ($disallowed as $d) {
-            if (str_starts_with($url, $d)) {
-                $url = str_replace($d, '', $url);
-            }
-        }
-        return $url;
+        return (str_contains($value, ' ') || str_contains($value, ',')) ? sprintf('"%s"', $value) : $value;
     }
 
+    public static function removeHTTP($url): string
+    {
+        return preg_replace('#^https?://#', '', $url);
+    }
+
+    public static function getTgInfo($item)
+    {
+        return self::tgRequest('get', 'info', compact('item'));
+    }
+
+    public static function configureTg($item, $chat_id)
+    {
+        $app_name = env('APP_NAME');
+        $admin_url = env('ADMIN_URL');
+        return self::tgRequest('post', 'configure', compact('item', 'chat_id', 'app_name', 'admin_url'));
+    }
+
+    public static function sendTgMessage($item, $n_type, $msg)
+    {
+        return self::tgRequest('post', 'send-message', compact('item', 'n_type', 'msg'));
+    }
+
+    private static function tgRequest($method, $endpoint, $params = [])
+    {
+        $settings = DB::table('app_settings')->where('id', 1)->first();
+        $token = $settings->code;
+        $domain = $_SERVER['SERVER_NAME'];
+
+        $params = array_merge(compact('domain', 'token'), $params);
+
+        $verify = Http::$method(self::TG_API_BASE . $endpoint, $params);
+
+        if ($verify->status() !== 200) {
+            if ($verify->status() === 401) {
+                $updateData = [
+                    'activated' => 0,
+                    'error_reason' => self::getErrorReason($verify->status())
+                ];
+                DB::table('app_settings')->where('id', 1)->update($updateData);
+            }
+            return ['status' => 'error', 'data' => $verify->json()['error']];
+        }
+
+        return $verify->json();
+    }
 }

@@ -13,7 +13,7 @@
 
                         <ul class="list-group mt-2">
                             <li class="list-group-item text-semibold">
-                                Php version 8.0.2 +
+                                PHP Version >= 8.0.2 :
 
                                 @if ($permission['php'])
                                     <i class="la la-check text-success float-right"></i>
@@ -23,7 +23,7 @@
                             </li>
 
                             <li class="list-group-item text-semibold">
-                                Curl Enabled
+                                Curl Enabled :
 
                                 @if ($permission['curl'])
                                     <i class="la la-check text-success float-right"></i>
@@ -33,7 +33,7 @@
                             </li>
 
                             <li class="list-group-item text-semibold">
-                                Mysqli
+                                Mysqli :
 
                                 @if ($permission['mysqli'])
                                     <i class="la la-check text-success float-right"></i>
@@ -43,7 +43,7 @@
                             </li>
 
                             <li class="list-group-item text-semibold">
-                                Ctype
+                                Ctype :
 
                                 @if ($permission['ctype'])
                                     <i class="la la-check text-success float-right"></i>
@@ -53,7 +53,7 @@
                             </li>
 
                             <li class="list-group-item text-semibold">
-                                Fileinfo
+                                Fileinfo :
 
                                 @if ($permission['fileinfo'])
                                     <i class="la la-check text-success float-right"></i>
@@ -63,7 +63,7 @@
                             </li>
 
                             <li class="list-group-item text-semibold">
-                                JSON
+                                JSON :
 
                                 @if ($permission['json'])
                                     <i class="la la-check text-success float-right"></i>
@@ -73,7 +73,7 @@
                             </li>
 
                             <li class="list-group-item text-semibold">
-                                Mbstring
+                                Mbstring :
 
                                 @if ($permission['mbstring'])
                                     <i class="la la-check text-success float-right"></i>
@@ -83,7 +83,7 @@
                             </li>
 
                             <li class="list-group-item text-semibold">
-                                OpenSSL
+                                OpenSSL :
 
                                 @if ($permission['openssl'])
                                     <i class="la la-check text-success float-right"></i>
@@ -93,7 +93,7 @@
                             </li>
 
                             <li class="list-group-item text-semibold">
-                                PDO
+                                PDO :
 
                                 @if ($permission['pdo'])
                                     <i class="la la-check text-success float-right"></i>
@@ -103,7 +103,7 @@
                             </li>
 
                             <li class="list-group-item text-semibold">
-                                Tokenizer
+                                Tokenizer :
 
                                 @if ($permission['tokenizer'])
                                     <i class="la la-check text-success float-right"></i>
@@ -113,7 +113,7 @@
                             </li>
 
                             <li class="list-group-item text-semibold">
-                                XML
+                                XML :
 
                                 @if ($permission['xml'])
                                     <i class="la la-check text-success float-right"></i>
@@ -123,7 +123,7 @@
                             </li>
 
                             <li class="list-group-item text-semibold">
-                                <b>.env</b> File Permission
+                                <b>.env</b> Permission :
 
                                 @if ($permission['env_write'])
                                     <i class="la la-check text-success float-right"></i>
@@ -132,7 +132,7 @@
                                 @endif
                             </li>
                             <li class="list-group-item text-semibold">
-                                File Permission
+                                File Permission :
 
                                 @if ($permission['file_write'])
                                     <i class="la la-check text-success float-right"></i>

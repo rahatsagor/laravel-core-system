@@ -9,27 +9,85 @@ use Rahatsagor\LaravelCoreSystem\Console\CheckLicense;
 class LaravelCoreSystemServiceProvider extends ServiceProvider
 {
     /**
-     * Bootstrap the application services.
+     * Register services.
+     *
+     * @return void
      */
-    public function boot()
+    public function register(): void 
     {
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'laravel-core-system');
-        $this->loadRoutesFrom(__DIR__ . '/../routes/install.php');
-        $this->commands([
-            CheckLicense::class,
-        ]);
-        $this->app->afterResolving(Schedule::class, function (Schedule $schedule) {
-            $schedule->command(CheckLicense::class)->weekly();
-        });
+        $this->registerSingleton();
     }
 
     /**
-     * Register the application services.
+     * Bootstrap services.
+     *
+     * @return void
      */
-    public function register()
+    public function boot(): void
     {
-        $this->app->singleton('laravel-core-system', function () {
-            return new LaravelCoreSystem;
+        $this->registerViews()
+             ->registerRoutes();
+
+        $this->registerConsoleServices();
+    }
+
+    /**
+     * Register the singleton binding.
+     */
+    private function registerSingleton(): void
+    {
+        $this->app->singleton('laravel-core-system', fn() => new LaravelCoreSystem);
+    }
+
+    /**
+     * Register view resources.
+     */
+    private function registerViews(): self
+    {
+        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'laravel-core-system');
+        return $this;
+    }
+
+    /**
+     * Register routes.
+     */
+    private function registerRoutes(): self
+    {
+        $this->loadRoutesFrom(__DIR__ . '/../routes/install.php');
+        return $this;
+    }
+
+    /**
+     * Register console-specific services.
+     */
+    private function registerConsoleServices(): void
+    {
+        if (!$this->app->runningInConsole()) {
+            return;
+        }
+
+        $this->commands([CheckLicense::class]);
+        $this->scheduleLicenseCheck();
+    }
+
+    /**
+     * Schedule the license check.
+     */
+    private function scheduleLicenseCheck(): void
+    {
+        $this->app->booted(function () {
+            try {
+                $schedule = $this->app->make(Schedule::class);
+                $schedule->command('rs:check')
+                        ->daily()
+                        ->withoutOverlapping()
+                        ->onFailure(function () {
+                            logger()->error('License check failed');
+                        })
+                        ->runInBackground();
+            } catch (\Exception $e) {
+                logger()->error('Failed to schedule license check: ' . $e->getMessage());
+            }
         });
     }
 }

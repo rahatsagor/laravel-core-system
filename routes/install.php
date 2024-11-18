@@ -23,4 +23,10 @@ Route::group([
 Route::get('/go-to-frontend',function (){return redirect(config('app.site_url'));})->name('install.frontend');
 Route::get('/go-to-admin',function (){return redirect(config('app.admin_url'));})->name('install.admin');
 
+Route::get('/get-server-address', function (){
+    return response()->json([
+        'server' => $_SERVER['SERVER_NAME']
+    ]);
+});
+
 
