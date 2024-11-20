@@ -30,8 +30,12 @@ class LaravelCoreSystem
     {
         $domain = $_SERVER['SERVER_NAME'];
         $name = env('ITEM_NAME');
-        $verify = Http::post(self::LICENSE_API_BASE . 'envato-register-license', compact('domain', 'code', 'email', 'name'));
-
+        $verify = Http::post(self::LICENSE_API_BASE . 'envato-register-license', [
+            'key' => $code,
+            'domain' => $domain,
+            'email' => $email,
+            'item' => $name
+        ]);
         $status = $verify->status();
         if ($status === 200 || $status === 202) {
             $data = [

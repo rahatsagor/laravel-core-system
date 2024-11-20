@@ -2,7 +2,7 @@
 
 All notable changes to `laravel-core-system` will be documented in this file
 
-## 1.1.0 - 2024-11-18
+## 1.1.0 - 2024-11-20
 
 - Added TG Notifications
 
