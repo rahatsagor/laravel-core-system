@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Rahatsagor\LaravelCoreSystem\LaravelCoreSystem;
 
@@ -33,7 +34,7 @@ class InstallController extends Controller
 
     public function step3()
     {
-        return file_exists(storage_path('/app/license.json'))
+        return Storage::exists('license.json')
             ? view('laravel-core-system::step3')
             : redirect('/install/step2');
     }
